@@ -3,7 +3,7 @@
 @author: Drayang
 @Supervisor : Dr Soon Foo Chong
 Created on :  Sun Dec 27 13:27:03 2020
-Trial_2
+Code_1
 """
 
 
