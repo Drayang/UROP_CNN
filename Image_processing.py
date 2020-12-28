@@ -89,19 +89,19 @@ Comment : Can remove /255.0 so data is in normal form so it is exactly the same
 
 ## Creating train data
 # 897:10 class;5060:50 class 12036:100 class;31148: 281 class
-i = 5060
+i = 31148
 creating_data(train_list,x_train,y_train,i)
 x_train = np.array(x_train)
 print("x_train done")
 
 ## Creating test data
 # 386:10 class; 2166 : 50 class; 5154:100 class;13333:281 class
-i = 2166
+i = 13333
 creating_data(test_list,x_test,y_test,i)
 x_test = np.array(x_test)
 
 print("x_test done")
-savez_compressed('Car50.npz',x_test = x_test,y_test = y_test, x_train = x_train, y_train = y_train)
+savez_compressed('Car.npz',x_test = x_test,y_test = y_test, x_train = x_train, y_train = y_train)
 
 print('Saving done')
 '''
@@ -134,85 +134,3 @@ extracting data set(for checking purpose only)
 # #check model name correct or not
 # datay = to_categorical(datay)
 # print(model_data[np.argmax(datay[449])])
-
-'''
-Older version used.
-'''
-
-#print('X_data is:')
-#print(x_test[:])
-# print('y_data is:')
-# print(y_test[0])
-
-
-# for img in train_list:
-#     #load image
-#     image = Image.open('image/'+ img)
-#     train_data = np.asarray(image)
-#     train_data = train_data/255.0
-    
-#     #To get the Make of vehicle indices
-#     model_index = img.split('/')
-#     y_train.append(int(model_index[0])-1)
-    
-#     # this one give string
-#     #y_train.append(make_data[ int(model_index[0])-1 ])  #To get the correct indices
-    
-#     #print(x_train)
-#     #print(x_train.shape)
-    
-#     ## resize image
-#     image.thumbnail((640,640))
-#     print(image.size)
-    
-#     ## show image using Plot
-#     plt.imshow(train_data)
-    
-#     ## show image using image app
-#     #image.show()
-    
-#     #print('> loaded {} {}' .format(i, x_train.shape))
-    
-#     x_train.append(train_data)
-#     break
-
-
-
-
-
-
-
-'''
-
-Example found online ( can remove )
-
-'''
-
-# import os 
-# import cv2
-
-# #setting the path to the directory containing the pics
-# path = 'testing/'
-
-#print(os.listdir())
-
-#appending the pics to the training data list
-# training_data = []
-# for img in os.listdir(path):
-#     pic = cv2.imread(os.path.join(path,img))
-#     pic = cv2.cvtColor(pic,cv2.COLOR_BGR2RGB)
-#     pic = cv2.resize(pic,(80,80))
-#     training_data.append([pic])
-    
-    
-# #converting the list to numpy array and saving it to a file using #numpy.save
-# np.save(os.path.join(path,'features'),np.array(training_data))
-
-
-# #loading the saved file once again
-# saved = np.load(os.path.join(path,'features.npy'))
-
-# print(saved)
-
-# plt.imshow(saved[0].reshape(80,80,3))
-# plt.imshow(np.array(training_data[0]).reshape(80,80,3))
