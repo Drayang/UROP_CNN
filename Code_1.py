@@ -55,7 +55,7 @@ train_list = np.loadtxt('train_surveillance.txt',comments="#", delimiter=",",dty
 Load data set
 '''
 
-dataset_file = 'Car10.npz'
+dataset_file = 'Car.npz'
 
 ## load numpy array from .npz file
 def load_data(file):
@@ -154,7 +154,7 @@ Prediction
 
 probability_model = tf.keras.Sequential([model, layers.Softmax()])
 
-rand = random.randint(0,386)
+rand = random.randint(0,13333)
 
 #prediction is an array of "confidence" to the class
 predictions = probability_model.predict(x_test)
