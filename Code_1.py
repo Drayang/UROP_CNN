@@ -18,6 +18,8 @@ from scipy import io
 
 import random
 
+from contextlib import redirect_stdout
+
 '''
 Load .mat file text
 '''
@@ -79,6 +81,8 @@ x_test = x_test.astype('float32') /255.0
 #Identify the number of class
 class_num = max(y_test)+1
 
+#Identify the number of testing images
+image_num = len(y_test)
 
 ## np.argmax use to find the index of max value, hence use to identify the model name
 #print(model_data[np.argmax(y_train)])
@@ -91,36 +95,40 @@ Comment: X_train and x_test is a 4D np.array
 Verify the dataset
 '''
 
-plt.figure(figsize=(10,10))
-for i in range(25):
-    index= i*i
-    plt.subplot(5,5,i+1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(x_train[index], cmap=plt.cm.binary)
-    plt.xlabel(model_name[y_train[index]])
-plt.show()
+# plt.figure(figsize=(10,10))
+# for i in range(25):
+#     index= i*i
+#     plt.subplot(5,5,i+1)
+#     plt.xticks([])
+#     plt.yticks([])
+#     plt.grid(False)
+#     plt.imshow(x_train[index], cmap=plt.cm.binary)
+#     plt.xlabel(model_name[y_train[index]])
+# plt.show()
 
-#%%
+
 '''
 Designing the model
 '''
 
 model = models.Sequential()
+#Number of filer = 32,filter size = 3x3
 model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=x_train.shape[1:]))
-model.add(layers.MaxPooling2D((2, 2)))
+#model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
 
 
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
+# model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.Dense(512, activation='relu'))
 model.add(layers.Dense(class_num))
 
 
-# model.summary()
+model.summary()
 
 # Compile and train model
 
@@ -128,12 +136,25 @@ model.compile(optimizer='adam',
               loss=losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
+
+
+
+
 '''
 Training data
 '''
-epochs = 10
-history = model.fit(x_train, y_train, epochs=epochs, 
-                    validation_data=(x_test, y_test))
+epochs = 25
+
+history = model.fit(
+    x_train,
+    y_train,
+    #batch_size=64,
+    epochs=epochs,
+    # We pass some validation for
+    # monitoring validation loss and metrics
+    # at the end of each epoch
+    validation_data=(x_test, y_test),
+)
 
 ## Evaluate the model
 plt.plot(history.history['accuracy'], label='accuracy')
@@ -147,6 +168,22 @@ test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)
 print('\nTest accuracy:', test_acc)
 
 
+
+
+#%%
+
+# Store data into a txt file
+with open('model_summary.txt', 'a+') as f:
+    f.write("\n\n_________________________________________________________________\n\n")
+    with redirect_stdout(f):
+        model.summary()
+    f.write("\nNumber of class used: {}".format(class_num))
+    f.write("\nNumber of epochs: {}".format(epochs))   
+    f.write("\nText accuracy: {}".format(test_acc))
+    f.write("\nTest lost: {}".format(test_loss))    
+
+
+
 #%%
 '''
 Prediction 
@@ -154,14 +191,18 @@ Prediction
 
 probability_model = tf.keras.Sequential([model, layers.Softmax()])
 
-rand = random.randint(0,13333)
+
+rand = random.randint(0,image_num)
 
 #prediction is an array of "confidence" to the class
 predictions = probability_model.predict(x_test)
 print(predictions[rand])
+max_prob = np.amax(predictions)
+
 prediction_index = np.argmax(predictions[rand])
 prediction_model_name = model_name[prediction_index]
 correct_model_name = model_name[y_test[rand]]
+print("The random vehicle we select:{}".format(rand))
 print('The prediction car model:{}'.format(prediction_model_name))
 print('The correct car model:{}'.format(correct_model_name))
 
