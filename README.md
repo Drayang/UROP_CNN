@@ -12,5 +12,7 @@ Description of the files as follows-
 
 Image_processing.py : Process CompCar image into numpy array form and store as .npz file (MUST done first)
 
-Code_1.py : Very basic CNN model for vehicle recognition
+Code_1.py : Very basic CNN model for vehicle recognition 
+
+Code_2.py : Adding more api function into the model 
 
