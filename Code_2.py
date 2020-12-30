@@ -1,35 +1,36 @@
-# -*- coding: utf-8 -*-
 """
-
 @author: Drayang
 @Supervisor : Dr Soon Foo Chong
 Created on : Thu Dec 17 13:54:44 2020
-Trial_1
+Updated on : Tue Dec 29 23:00:00 2020
+Code_2
 
 """
-'''
-Setup
 
 '''
+Setup
+'''
+# Import required module
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import random
 import numpy as np
 
 from tensorflow import keras
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense,Dropout,Flatten, BatchNormalization, Activation
 from tensorflow.keras.layers import Conv2D, MaxPooling2D,Softmax
 from tensorflow.keras.constraints import MaxNorm
 from tensorflow.keras.utils import to_categorical
-from time import time
+from tensorflow.keras import callbacks
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+
+from time import time, strftime, gmtime
 from contextlib import redirect_stdout
-from PIL import Image
 from scipy import io
 
 '''
 Load .mat file text
-
 '''
 
 ### color_list.mat
@@ -39,11 +40,6 @@ image_path = np.array(color_list[:,0])
 color_value = np.array(color_list[:,1])
 
 color =['black','white','red','yellow','blue','green','purple','brown','magenta','silver','aqua'] 
-
-
-#color_value = np.array(color_value)
-# print(color_value[:])
-# print(type(color_value[:]))
 
 ### sv_make_model_name.mat
 sv_make_model_name_mat = io.loadmat('sv_make_model_name.mat')
@@ -57,16 +53,14 @@ Comment : make_data and model_id_data are not necessary here, but just leave it 
           color_list.mat: haven't find out the purpose of color yet, maybe use for plotting or segmentation purpose
 '''
 
-### read .txt file to acess the image
+# ## read .txt file to acess the image
 #output is 1-D np.array list
 test_list = np.loadtxt("test_surveillance.txt", comments="#", delimiter=",",dtype = 'str', unpack=False)
 train_list = np.loadtxt('train_surveillance.txt',comments="#", delimiter=",",dtype = 'str', unpack=False)
 
 
 '''
-
 Load data set
-
 '''
 
 dataset_file = 'Car.npz'
@@ -92,22 +86,21 @@ x_test = x_test.astype('float32') /255.0
 
 
 ### One hote encode output
-# y_train = to_categorical(y_train)
-# y_test = to_categorical(y_test)
-# # define number of class
-# class_num = y_test.shape[1]
-
-#Identify the number of class
-class_num = max(y_test)+1
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+# define number of class
+class_num = y_test.shape[1]
 
 #Identify the number of testing images
-image_num = len(y_test)
+image_num = y_test.shape[0]
 
 
+# ## Used if using loss = 'sparse_categorical_entropy'
+# #Identify the number of testing images
+# image_num = len(y_test)
 
-
-## np.argmax use to find the index of max value, hence use to identify the model name
-#print(model_data[np.argmax(y_train)])
+# #Identify the number of class
+# class_num = max(y_test)+1
 
 '''
 Comment: X_train and x_test is a 4D np.array
@@ -116,61 +109,64 @@ Comment: X_train and x_test is a 4D np.array
 '''
 Create the model
 '''
-
 model = Sequential()
 
+################################ REMINDER ################################
+
+
+model._name = 'Model_1'
+
+
+################################ REMINDER ################################
+
 #Number of filer = 32, size = 3x3 ,padding = 'same'(no changing size of image)
-model.add(Conv2D(32,(3,3),activation = 'relu', input_shape = x_train.shape[1:], padding = 'same'))
+model.add(Conv2D(32,(3,3),activation = 'relu', input_shape = x_train.shape[1:], padding = 'same',name = "Conv2D_1"))
 # Dropout layer to prevent overfitting
-model.add(Dropout(0.2))
+model.add(Dropout(0.2, name = "DropOut_1"))
 # Batch normalization normalizes the inputs heading into next layer, ensuring that the network always creates activations with the same distribution that we desire
-model.add(BatchNormalization())
+model.add(BatchNormalization(name = "Batch_normalization_1"))
 
 
 #Convolution layer, filter size increase so the network can learn more complex representation
-model.add(Conv2D(64,(3,3), padding = 'same'))
-model.add(Activation('relu')) 
+model.add(Conv2D(64,(3,3), padding = 'same' , name = "Conv2D_2" ,activation ='relu'))
+#model.add(Activation('relu', name = "RELU_1")) 
 # Pooling Layer
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.2))
-model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2) , name = "MaxPool_1" ))
+model.add(Dropout(0.2, name = "DropOut_2"))
+model.add(BatchNormalization(name = "Batch_normalization_2"))
 
+model.add(Conv2D(64, (3, 3), padding='same', name = "Conv2D_3", activation ='relu'))
+# model.add(Activation('relu', name = "RELU_2"))
+model.add(MaxPooling2D(pool_size=(2, 2), name = "MaxPool_2"))
+model.add(Dropout(0.2 , name = "DropOut_3"))
+model.add(BatchNormalization(name = "Batch_normalization_3"))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.2))
-model.add(BatchNormalization())
-
-model.add(Conv2D(128, (3, 3), padding='same'))
-model.add(Activation('relu'))
-model.add(Dropout(0.2))
-model.add(BatchNormalization())
-
+model.add(Conv2D(128, (3, 3), padding='same' , name = "Conv2D_4", activation ='relu'))
+# model.add(Activation('relu',  name = "RELU"))
+model.add(Dropout(0.2 , name = "DropOut_4"))
+model.add(BatchNormalization(name = "Batch_normalization_4"))
 
 # Flatten data for classification purpose
-model.add(Flatten())
-model.add(Dropout(0.2))
-
+model.add(Flatten(name = "Flatten_1"))
+model.add(Dropout(0.2 , name = "DropOut_5"))
 
 # Create densely connected layer
 # We need specify the number of neurons(256,128) and it decrease as deeper layer,eventually same as the classes size (class_num)
 # Kernel constraint regularize the data as it learns and help prevent overfitting
-model.add(Dense(256, kernel_constraint = MaxNorm(3),activation ='relu'))
-model.add(Dropout(0.2))
-model.add(BatchNormalization())    
-model.add(Dense(128, kernel_constraint = MaxNorm(3),activation ='relu'))
-model.add(Dropout(0.2))
-model.add(BatchNormalization())
+model.add(Dense(256, kernel_constraint = MaxNorm(3),activation ='relu',  name = "Dense_1"))
+model.add(Dropout(0.2,  name = "DropOut_6"))
+model.add(BatchNormalization( name = "Batch_normalization_5"))    
+model.add(Dense(128, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
+model.add(Dropout(0.2,  name = "DropOut_7"))
+model.add(BatchNormalization(name = "Batch_normalization_6"))
 # Final Layer
-model.add(Dense(class_num,activation = 'softmax'))
+model.add(Dense(class_num,activation = 'softmax', name = "Softmax"))
 
 # Compile the model
 optimizer = 'Adam'
-model.compile(loss = 'sparse_categorical_crossentropy', optimizer = optimizer , metrics = ['accuracy'])
+model.compile(loss = 'categorical_crossentropy', optimizer = optimizer , metrics = ['accuracy'])
 
 model.summary()
-
 '''
 
 Comment: Increase filters as you go on and it's advised to make them powers of 2 
@@ -183,26 +179,45 @@ Comment: Increase filters as you go on and it's advised to make them powers of 2
 
 
 '''
-
 Training data
-
 '''
+# Save the model or model weights 
+model_filepath =  model._name + '.h5'
+checkpointer = ModelCheckpoint(filepath=model_filepath, 
+                                monitor='val_accuracy', 
+                                verbose = 1, 
+                                save_best_only=True, 
+                                save_weights_only=False, 
+                                mode='auto', 
+                                save_freq = 'epoch')
 
-# Train the model
-epochs = 10
+# Early stopping callback function
+early_stopping = EarlyStopping(monitor='val_loss',  
+                               patience=5, 
+                               verbose=1,
+                               mode='auto', 
+                               baseline=None, 
+                               restore_best_weights=False)
 
 # Calculate the training time
 start = time()
 
+# Define number of epochs
+epochs = 25
 
+# Train the model
 history = model.fit(x_train, y_train, 
                     validation_data=(x_test, y_test), 
                     epochs=epochs, 
-                    batch_size=64)
+                    verbose = 1,
+                    batch_size=64,
+                    callbacks = [checkpointer,early_stopping]
+                    )
 
 
 # Determine training time and convert into minute
-train_time = (time()-start)/60
+train_time = strftime("%H hour %M min %S seconds", gmtime(time()-start))
+
 
 ## Evaluate the model
 #Plot Accuracy during training
@@ -221,28 +236,52 @@ plt.plot(history.history['loss'], label='train_loss')
 plt.plot(history.history['val_loss'], label='val_loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
-plt.ylim([0, 1])
-plt.legend(loc = 'lower right')
+plt.ylim([0, 5])
+plt.legend(loc = 'upper right')
 
 # Final evaluation of the model
 test_loss,test_acc = model.evaluate(x_test, y_test, verbose=0)
 
-print("\nTraining time: {:.2f} minutes".format(train_time))
+print("\nTraining time: {}".format(train_time))
 print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
 print("\nTest Loss:{:.2f}%" .format(test_loss*100))
 
+
 #%%
 # Store data into a txt file
-with open('summary_Trial_1.txt', 'a+') as f:
+with open('summary_Code_2.txt', 'a+') as f:
     f.write("\n\n_________________________________________________________________\n\n")
     with redirect_stdout(f):
         model.summary()
     f.write("\nNumber of class used: {}".format(class_num))
-    f.write("\nNumber of epochs: {}".format(epochs))   
+    # f.write("\nNumber of epochs: {}".format(epochs))   
+    f.write("\nNumber of epochs: {}".format(len(history.history['val_loss'])))   
     f.write("\nTest Accuracy:{:.2f}%" .format(test_acc*100))
     f.write("\nTest Loss:{:.2f}%" .format(test_loss*100))  
-    f.write("\nTotal training time:{:.2f} minutes".format(train_time))
+    f.write("\nTotal training time: {}".format(train_time))
 
+
+#%%
+
+'''
+To load trained model
+'''
+
+# new_model = load_model('Model_1.h5')
+
+
+# # history = new_model.fit(x_train, y_train, 
+# #                     validation_data=(x_test, y_test), 
+# #                     epochs=epochs, 
+# #                     batch_size=64,
+# #                     )
+
+
+# test_loss,test_acc = new_model.evaluate(x_test, y_test, verbose=0)
+
+# print("\nTraining time: {} minutes".format(train_time))
+# print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
+# print("\nTest Loss:{:.2f}%" .format(test_loss*100))
 
 #%%
 '''
@@ -256,14 +295,13 @@ rand = random.randint(0,image_num)
 
 #prediction is an array of "confidence" to the class
 predictions = probability_model.predict(x_test)
-print(predictions[rand])
-max_prob = np.amax(predictions)
+#print(predictions[rand])
 
 prediction_index = np.argmax(predictions[rand])
 prediction_model_name = model_name[prediction_index]
-correct_model_name = model_name[y_test[rand]]
+#np.argmax use to find the index of max value, hence use to identify the model name
+correct_model_name = model_name[np.argmax(y_test[rand])]
 print("The random vehicle we select:{}".format(rand))
 print('The prediction car model:{}'.format(prediction_model_name))
 print('The correct car model:{}'.format(correct_model_name))
 
-#%%
