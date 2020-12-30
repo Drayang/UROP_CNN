@@ -184,7 +184,6 @@ Comment: Increase filters as you go on and it's advised to make them powers of 2
           Do not have too many pooling layer as it discards some data
 '''
 
-
 '''
 Training data
 '''
