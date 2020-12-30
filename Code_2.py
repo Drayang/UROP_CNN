@@ -159,10 +159,10 @@ model.add(Dropout(0.2 , name = "DropOut_5"))
 # Create densely connected layer
 # We need specify the number of neurons(256,128) and it decrease as deeper layer,eventually same as the classes size (class_num)
 # Kernel constraint regularize the data as it learns and help prevent overfitting
-model.add(Dense(256, kernel_constraint = MaxNorm(3),activation ='relu',  name = "Dense_1"))
+model.add(Dense(1024, kernel_constraint = MaxNorm(3),activation ='relu',  name = "Dense_1"))
 model.add(Dropout(0.2,  name = "DropOut_6"))
 model.add(BatchNormalization( name = "Batch_normalization_5"))    
-model.add(Dense(128, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
+model.add(Dense(512, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
 model.add(Dropout(0.2,  name = "DropOut_7"))
 model.add(BatchNormalization(name = "Batch_normalization_6"))
 # Final Layer
@@ -172,7 +172,7 @@ model.add(Dense(class_num,activation = 'softmax', name = "Softmax"))
 optimizer = 'Adam'
 model.compile(loss = 'categorical_crossentropy', optimizer = optimizer , metrics = ['accuracy'])
 
-model.summary()
+# model.summary()
 
 '''
 
@@ -200,8 +200,8 @@ checkpointer = ModelCheckpoint(filepath=model_filepath,
 
 # Early stopping callback function
 early_stopping = EarlyStopping(monitor='val_loss',  
-                               patience=5, 
-                               verbose=1,
+                               patience = 5, 
+                               verbose = 1,
                                mode='auto', 
                                baseline=None, 
                                restore_best_weights=False)
@@ -211,7 +211,7 @@ early_stopping = EarlyStopping(monitor='val_loss',
 start = time()
 
 # Define number of epochs
-epochs = 25
+epochs = 45
 
 # Train the model
 history = model.fit(x_train, y_train, 
@@ -255,11 +255,6 @@ print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
 print("\nTest Loss:{:.2f}%" .format(test_loss*100))
 
 
-
-
-
-
-
 #%%
 # Store data into a txt file
 with open('summary_Code_2.txt', 'a+') as f:
@@ -297,8 +292,6 @@ To load trained model
 # print("\nTest Loss:{:.2f}%" .format(test_loss*100))
 
 
-
-
 #%%
 '''
 Prediction 
@@ -320,6 +313,4 @@ correct_model_name = model_name[np.argmax(y_test[rand])]
 print("The random vehicle we select:{}".format(rand))
 print('The prediction car model:{}'.format(prediction_model_name))
 print('The correct car model:{}'.format(correct_model_name))
-
-
 
