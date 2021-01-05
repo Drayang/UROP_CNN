@@ -2,7 +2,7 @@
 @author: Drayang
 @Supervisor : Dr Soon Foo Chong
 Created on : Thu Dec 17 13:54:44 2020
-Updated on : Tue Dec 29 23:00:00 2020
+Updated on : Mon Jan 4 23:00:00 2020
 Code_2
 
 """
@@ -102,6 +102,8 @@ image_num = y_test.shape[0]
 # #Identify the number of class
 # class_num = max(y_test)+1
 
+
+
 '''
 Comment: X_train and x_test is a 4D np.array
 '''
@@ -109,64 +111,69 @@ Comment: X_train and x_test is a 4D np.array
 '''
 Create the model
 '''
-model = Sequential()
+def create_model():
+    
+    model = Sequential()
+
+    #Number of filer = 32, size = 3x3 ,padding = 'same'(no changing size of image)
+    model.add(Conv2D(32,(3,3),activation = 'relu', input_shape = x_train.shape[1:], padding = 'same',name = "Conv2D_1"))
+    # Dropout layer to prevent overfitting
+    model.add(Dropout(0.2, name = "DropOut_1"))
+    # Batch normalization normalizes the inputs heading into next layer, ensuring that the network always creates activations with the same distribution that we desire
+    model.add(BatchNormalization(name = "Batch_normalization_1"))
+    
+    
+    #Convolution layer, filter size increase so the network can learn more complex representation
+    model.add(Conv2D(64,(3,3), padding = 'same' , name = "Conv2D_2" ,activation ='relu'))
+    # Pooling Layer
+    model.add(MaxPooling2D(pool_size=(2, 2) , name = "MaxPool_1" ))
+    model.add(Dropout(0.2, name = "DropOut_2"))
+    model.add(BatchNormalization(name = "Batch_normalization_2"))
+    
+    
+    model.add(Conv2D(64, (3, 3), padding='same', name = "Conv2D_3", activation ='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), name = "MaxPool_2"))
+    model.add(Dropout(0.2 , name = "DropOut_3"))
+    model.add(BatchNormalization(name = "Batch_normalization_3"))
+    
+    model.add(Conv2D(128, (3, 3), padding='same' , name = "Conv2D_4", activation ='relu'))
+    model.add(Dropout(0.2 , name = "DropOut_4"))
+    model.add(BatchNormalization(name = "Batch_normalization_4"))
+    
+    
+    # Flatten data for classification purpose
+    model.add(Flatten(name = "Flatten_1"))
+    model.add(Dropout(0.2 , name = "DropOut_5"))
+    
+    
+    # Create densely connected layer
+    # We need specify the number of neurons(256,128) and it decrease as deeper layer,eventually same as the classes size (class_num)
+    # Kernel constraint regularize the data as it learns and help prevent overfitting
+    model.add(Dense(1024, kernel_constraint = MaxNorm(3),activation ='relu',  name = "Dense_1"))
+    model.add(Dropout(0.2,  name = "DropOut_6"))
+    model.add(BatchNormalization( name = "Batch_normalization_5"))    
+    model.add(Dense(512, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
+    model.add(Dropout(0.2,  name = "DropOut_7"))
+    model.add(BatchNormalization(name = "Batch_normalization_6"))
+    # Final Layer
+    model.add(Dense(class_num,activation = 'softmax', name = "Softmax"))
+    
+    # Compile the model
+    optimizer = 'Adam'
+    model.compile(loss = 'categorical_crossentropy', optimizer = optimizer , metrics = ['accuracy'])
+    
+    return model
+
+model = create_model()
 
 ################################ REMINDER ################################
-
 
 model._name = 'Model_1'
 
-
 ################################ REMINDER ################################
-
-#Number of filer = 32, size = 3x3 ,padding = 'same'(no changing size of image)
-model.add(Conv2D(32,(3,3),activation = 'relu', input_shape = x_train.shape[1:], padding = 'same',name = "Conv2D_1"))
-# Dropout layer to prevent overfitting
-model.add(Dropout(0.2, name = "DropOut_1"))
-# Batch normalization normalizes the inputs heading into next layer, ensuring that the network always creates activations with the same distribution that we desire
-model.add(BatchNormalization(name = "Batch_normalization_1"))
-
-
-#Convolution layer, filter size increase so the network can learn more complex representation
-model.add(Conv2D(64,(3,3), padding = 'same' , name = "Conv2D_2" ,activation ='relu'))
-#model.add(Activation('relu', name = "RELU_1")) 
-# Pooling Layer
-model.add(MaxPooling2D(pool_size=(2, 2) , name = "MaxPool_1" ))
-model.add(Dropout(0.2, name = "DropOut_2"))
-model.add(BatchNormalization(name = "Batch_normalization_2"))
-
-model.add(Conv2D(64, (3, 3), padding='same', name = "Conv2D_3", activation ='relu'))
-# model.add(Activation('relu', name = "RELU_2"))
-model.add(MaxPooling2D(pool_size=(2, 2), name = "MaxPool_2"))
-model.add(Dropout(0.2 , name = "DropOut_3"))
-model.add(BatchNormalization(name = "Batch_normalization_3"))
-
-model.add(Conv2D(128, (3, 3), padding='same' , name = "Conv2D_4", activation ='relu'))
-# model.add(Activation('relu',  name = "RELU"))
-model.add(Dropout(0.2 , name = "DropOut_4"))
-model.add(BatchNormalization(name = "Batch_normalization_4"))
-
-# Flatten data for classification purpose
-model.add(Flatten(name = "Flatten_1"))
-model.add(Dropout(0.2 , name = "DropOut_5"))
-
-# Create densely connected layer
-# We need specify the number of neurons(256,128) and it decrease as deeper layer,eventually same as the classes size (class_num)
-# Kernel constraint regularize the data as it learns and help prevent overfitting
-model.add(Dense(256, kernel_constraint = MaxNorm(3),activation ='relu',  name = "Dense_1"))
-model.add(Dropout(0.2,  name = "DropOut_6"))
-model.add(BatchNormalization( name = "Batch_normalization_5"))    
-model.add(Dense(128, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
-model.add(Dropout(0.2,  name = "DropOut_7"))
-model.add(BatchNormalization(name = "Batch_normalization_6"))
-# Final Layer
-model.add(Dense(class_num,activation = 'softmax', name = "Softmax"))
-
-# Compile the model
-optimizer = 'Adam'
-model.compile(loss = 'categorical_crossentropy', optimizer = optimizer , metrics = ['accuracy'])
-
 model.summary()
+
+
 '''
 
 Comment: Increase filters as you go on and it's advised to make them powers of 2 
@@ -193,17 +200,18 @@ checkpointer = ModelCheckpoint(filepath=model_filepath,
 
 # Early stopping callback function
 early_stopping = EarlyStopping(monitor='val_loss',  
-                               patience=5, 
-                               verbose=1,
+                               patience = 4, 
+                               verbose = 1,
                                mode='auto', 
                                baseline=None, 
                                restore_best_weights=False)
+
 
 # Calculate the training time
 start = time()
 
 # Define number of epochs
-epochs = 25
+epochs = 45
 
 # Train the model
 history = model.fit(x_train, y_train, 
@@ -267,41 +275,57 @@ with open('summary_Code_2.txt', 'a+') as f:
 To load trained model
 '''
 
-# new_model = load_model('Model_1.h5')
+model.load_weights('Model_1.h5')
 
 
-# # history = new_model.fit(x_train, y_train, 
-# #                     validation_data=(x_test, y_test), 
-# #                     epochs=epochs, 
-# #                     batch_size=64,
-# #                     )
+# history = new_model.fit(x_train, y_train, 
+#                     validation_data=(x_test, y_test), 
+#                     epochs=epochs, 
+#                     batch_size=64,
+#                     )
 
 
-# test_loss,test_acc = new_model.evaluate(x_test, y_test, verbose=0)
+test_loss,test_acc = model.evaluate(x_test, y_test, verbose=0)
 
-# print("\nTraining time: {} minutes".format(train_time))
-# print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
-# print("\nTest Loss:{:.2f}%" .format(test_loss*100))
+print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
+print("\nTest Loss:{:.2f}%" .format(test_loss*100))
+
 
 #%%
 '''
 Prediction 
 '''
 
-probability_model = tf.keras.Sequential([model, Softmax()])
+probability_model = Sequential([model, Softmax()])
+# prediction_acc = 0
+n= 1
+# x=0
+
+for i in range(n):
+    rand = random.randint(0,image_num)
+    
+    #prediction is an array of "confidence" to the class
+    predictions = probability_model.predict(x_test)
+    #print(predictions[rand])
+    
+    prediction_index = np.argmax(predictions[rand])
+    prediction_model_name = model_name[prediction_index]
+    #np.argmax use to find the index of max value, hence use to identify the model name
+    correct_model_name = model_name[np.argmax(y_test[rand])]
+    print("The random vehicle we select:{}".format(rand))
+    print('The prediction car model:{}'.format(prediction_model_name[0]))
+    print('The correct car model:{}\n'.format(correct_model_name[0]))
+    
+#     if prediction_model_name[0] == correct_model_name[0]:
+#         x = x + 1
+
+#     if i == n:
+#         prediction_acc = (x/n) * 100
+#         break
+    
+# print('The prediction accuracy:{}'.format(prediction_acc))
 
 
-rand = random.randint(0,image_num)
 
-#prediction is an array of "confidence" to the class
-predictions = probability_model.predict(x_test)
-#print(predictions[rand])
 
-prediction_index = np.argmax(predictions[rand])
-prediction_model_name = model_name[prediction_index]
-#np.argmax use to find the index of max value, hence use to identify the model name
-correct_model_name = model_name[np.argmax(y_test[rand])]
-print("The random vehicle we select:{}".format(rand))
-print('The prediction car model:{}'.format(prediction_model_name))
-print('The correct car model:{}'.format(correct_model_name))
 
