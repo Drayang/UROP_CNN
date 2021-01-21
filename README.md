@@ -12,7 +12,15 @@ Description of the files as follows-
 
 Image_processing.py : Process CompCar image into numpy array form and store as .npz file (MUST done first)
 
+Image_processing2.py : Process the CompCar image into the form accepted by the ResNet and VGG16 model
+
 Code_1.py : Very basic CNN model for vehicle recognition 
 
 Code_2.py : Adding more api function into the model 
+
+Code_3.py : Using ResNet50 model 
+
+Code_4.py: Using VGG16 model
+
+
 
