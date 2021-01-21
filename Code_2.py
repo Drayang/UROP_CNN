@@ -2,7 +2,7 @@
 @author: Drayang
 @Supervisor : Dr Soon Foo Chong
 Created on : Thu Dec 17 13:54:44 2020
-Updated on : Mon Jan 4 23:00:00 2020
+Updated on : Mon Jan 18 09:43:03 2021
 Code_2
 
 """
@@ -18,7 +18,7 @@ import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense,Dropout,Flatten, BatchNormalization, Activation
+from tensorflow.keras.layers import Dense,Dropout,Flatten, BatchNormalization
 from tensorflow.keras.layers import Conv2D, MaxPooling2D,Softmax
 from tensorflow.keras.constraints import MaxNorm
 from tensorflow.keras.utils import to_categorical
@@ -63,7 +63,7 @@ train_list = np.loadtxt('train_surveillance.txt',comments="#", delimiter=",",dty
 Load data set
 '''
 
-dataset_file = 'Car.npz'
+dataset_file = 'Car64_281.npz'
 
 ## load numpy array from .npz file
 def load_data(file):
@@ -154,7 +154,7 @@ def create_model():
     model.add(BatchNormalization( name = "Batch_normalization_5"))    
     model.add(Dense(512, kernel_constraint = MaxNorm(3),activation ='relu', name = "Dense_2"))
     model.add(Dropout(0.2,  name = "DropOut_7"))
-    model.add(BatchNormalization(name = "Batch_normalization_6"))
+    model.add(BatchNormalization(name = "Batch_normalization_6"))  
     # Final Layer
     model.add(Dense(class_num,activation = 'softmax', name = "Softmax"))
     
@@ -168,10 +168,11 @@ model = create_model()
 
 ################################ REMINDER ################################
 
-model._name = 'Model_1'
+model._name = 'CNN4_30epochs_64x64'
 
 ################################ REMINDER ################################
 model.summary()
+
 
 
 '''
@@ -200,7 +201,7 @@ checkpointer = ModelCheckpoint(filepath=model_filepath,
 
 # Early stopping callback function
 early_stopping = EarlyStopping(monitor='val_loss',  
-                               patience = 4, 
+                               patience = 3, 
                                verbose = 1,
                                mode='auto', 
                                baseline=None, 
@@ -211,7 +212,7 @@ early_stopping = EarlyStopping(monitor='val_loss',
 start = time()
 
 # Define number of epochs
-epochs = 45
+epochs = 30
 
 # Train the model
 history = model.fit(x_train, y_train, 
@@ -219,7 +220,8 @@ history = model.fit(x_train, y_train,
                     epochs=epochs, 
                     verbose = 1,
                     batch_size=64,
-                    callbacks = [checkpointer,early_stopping]
+                    # callbacks = [checkpointer,early_stopping]
+                    callbacks = [checkpointer]
                     )
 
 
@@ -250,45 +252,41 @@ plt.legend(loc = 'upper right')
 # Final evaluation of the model
 test_loss,test_acc = model.evaluate(x_test, y_test, verbose=0)
 
+
+
+all_acc =history.history['val_accuracy']
+all_loss =history.history['val_loss']
+
 print("\nTraining time: {}".format(train_time))
-print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
-print("\nTest Loss:{:.2f}%" .format(test_loss*100))
+print("\nTest Accuracy: {:.2f}%" .format(np.max(all_acc)*100))
+print("\nThe epochs of highest accuracy : {}" .format(np.argmax(all_acc)+1))
+print("\nMean Loss:{:.5f}" .format(np.mean(all_loss)))
+print("\nMin Loss:{:.5f}" .format(np.min(all_loss)))
 
 
-#%%
+
+
 # Store data into a txt file
 with open('summary_Code_2.txt', 'a+') as f:
     f.write("\n\n_________________________________________________________________\n\n")
     with redirect_stdout(f):
         model.summary()
     f.write("\nNumber of class used: {}".format(class_num))
-    # f.write("\nNumber of epochs: {}".format(epochs))   
-    f.write("\nNumber of epochs: {}".format(len(history.history['val_loss'])))   
-    f.write("\nTest Accuracy:{:.2f}%" .format(test_acc*100))
-    f.write("\nTest Loss:{:.2f}%" .format(test_loss*100))  
+    f.write("\nNumber of epochs: {}".format(len(all_loss)))   
+    f.write("\nTest Accuracy:{:.2f}%" .format(np.max(all_acc)*100))
+    f.write("\nThe epochs of highest accuracy : {}" .format(np.argmax(all_acc)+1))    
+    # f.write("\nTest Loss:{:.2f}%" .format(test_loss*100)) 
+    f.write("\nMean Loss:{:.5f}" .format(np.mean(all_loss))) 
+    f.write("\nMin Loss:{:.5f}" .format(np.min(all_loss)))
     f.write("\nTotal training time: {}".format(train_time))
+    
+    f.write("\nAcc_10: {:.2f}%" .format(all_acc[9]*100))
+    f.write("\nAcc_20: {:.2f}%" .format(all_acc[19]*100))
+    f.write("\nAcc_30: {:.2f}%" .format(all_acc[29]*100))
+    # f.write("\nAcc_40: {:.2f}%" .format(all_acc[39]*100))
+    # f.write("\nAcc_50: {:.2f}%" .format(all_acc[49]*100))
 
 
-#%%
-
-'''
-To load trained model
-'''
-
-model.load_weights('Model_1.h5')
-
-
-# history = new_model.fit(x_train, y_train, 
-#                     validation_data=(x_test, y_test), 
-#                     epochs=epochs, 
-#                     batch_size=64,
-#                     )
-
-
-test_loss,test_acc = model.evaluate(x_test, y_test, verbose=0)
-
-print("\nTest Accuracy: {:.2f}%" .format(test_acc*100))
-print("\nTest Loss:{:.2f}%" .format(test_loss*100))
 
 
 #%%
@@ -298,7 +296,7 @@ Prediction
 
 probability_model = Sequential([model, Softmax()])
 # prediction_acc = 0
-n= 1
+n= 3
 # x=0
 
 for i in range(n):
@@ -316,14 +314,9 @@ for i in range(n):
     print('The prediction car model:{}'.format(prediction_model_name[0]))
     print('The correct car model:{}\n'.format(correct_model_name[0]))
     
-#     if prediction_model_name[0] == correct_model_name[0]:
-#         x = x + 1
-
-#     if i == n:
-#         prediction_acc = (x/n) * 100
-#         break
     
-# print('The prediction accuracy:{}'.format(prediction_acc))
+    
+
 
 
 
