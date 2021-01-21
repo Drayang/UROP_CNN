@@ -141,50 +141,19 @@ extracting data set(for checking purpose only)
 # load numpy array from .npz file
 # load dict of arrays
 
-# dict_data = np.load('Car_trial_10.npz')
+dict_data = np.load('CarApp224_10c.npz')
 
-# # extract the first array
-# datax = dict_data['x_train']
-# datay = dict_data['y_train']
-# # print the array
-# print(datax[2])
-# print(datay[2])
-# plt.imshow(datax[2])
+# extract the first array
+datax = dict_data['x_train']
+datay = dict_data['y_train']
+# print the array
+print(datax[2])
+print(datay[2])
+plt.imshow(datax[2])
 
-# #check model name correct or not
-# datay = to_categorical(datay)
-# print(model_data[np.argmax(datay[2])])
-
-
+#check model name correct or not
+datay = to_categorical(datay)
+print(model_data[np.argmax(datay[2])])
 
 
 
-
-
-
-  
-# # load the image via load_img function 
-# img = load_img('sample.png') 
-  
-# # details about the image printed below 
-# print(type(img)) 
-# print(img.format) 
-# print(img.mode) 
-# print(img.size) 
-  
-# # convert the given image into  numpy array 
-# img_numpy_array = img_to_array(img) 
-# print("Image is converted and NumPy array information :") 
-  
-# # <class 'numpy.ndarray'> 
-# print(type(img_numpy_array)) 
-  
-
-# # type: float32 
-# print("type:", img_numpy_array.dtype) 
-  
-# # shape: (200, 400, 3) 
-# print("shape:", img_numpy_array.shape) 
-  
-# # convert back to image 
-# img_pil_from_numpy_array = array_to_img(img_numpy_array) 
